@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Béton Pro Tracteur</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f2f2f7; padding: 10px; color: #1c1c1e; }
+        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        h2 { color: #1c1c1e; text-align: center; margin-bottom: 20px; font-size: 1.4em; font-weight: 800; }
+        .grid { display: flex; gap: 10px; margin-bottom: 12px; }
+        .col { flex: 1; position: relative; }
+        label { display: block; font-weight: 600; color: #8e8e93; font-size: 0.7em; text-transform: uppercase; margin-bottom: 4px; padding-left: 2px; }
+        .input-container { position: relative; display: flex; align-items: center; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #d1d1d6; border-radius: 12px; box-sizing: border-box; font-size: 16px; background: #f9f9f9; -webkit-appearance: none; }
+        .input-unit { position: absolute; right: 10px; color: #aeaeb2; font-size: 0.8em; font-weight: 500; pointer-events: none; }
+        .mode-selector { background: #f2f2f7; padding: 15px; border-radius: 16px; margin: 20px 0; border: 1px solid #e5e5ea; }
+        .result-box { background: #fff; padding: 15px; border-radius: 16px; margin-top: 10px; border: 1px solid #e5e5ea; }
+        .res-item { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; font-size: 1.05em; padding-bottom: 6px; border-bottom: 1px solid #f2f2f7; }
+        .blue-res { color: #007aff; font-weight: 700; font-size: 1.2em; }
+        .orange-res { color: #ff9500; font-weight: 700; font-size: 1.2em; }
+        .unit { font-size: 0.85em; margin-left: 2px; font-weight: 600; }
+        .recipe-title { font-weight: 800; margin-bottom: 12px; color: #ff9500; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.5px; border-bottom: 2px solid #ff9500; display: inline-block; }
+        .footer { font-size: 0.7em; color: #8e8e93; text-align: center; margin-top: 15px; line-height: 1.4; }
+        b { color: #1c1c1e; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>🚜 Dalle Agricole</h2>
+    
+    <div class="grid">
+        <div class="col"><label>Longueur</label><div class="input-container"><input type="number" id="long" value="5" oninput="calculer()"><span class="input-unit">m</span></div></div>
+        <div class="col"><label>Largeur</label><div class="input-container"><input type="number" id="larg" value="5" oninput="calculer()"><span class="input-unit">m</span></div></div>
+    </div>
+    <div class="grid">
+        <div class="col"><label>Épaisseur</label><div class="input-container"><input type="number" id="ep" value="18" oninput="calculer()"><span class="input-unit">cm</span></div></div>
+        <div class="col"><label>Perte</label><div class="input-container"><input type="number" id="perte" value="10" oninput="calculer()"><span class="input-unit">%</span></div></div>
+    </div>
+
+    <div class="mode-selector">
+        <label>Méthode de calcul</label>
+        <select id="methode" onchange="toggleMode()">
+            <option value="sac">Par nombre de sacs</option>
+            <option value="machine">Par volume bétonnière</option>
+        </select>
+        <div id="divSac" style="margin-top:12px;"><label>Sacs (25kg) / gâchée</label><input type="number" id="nbSacsFixe" value="1" step="0.5" oninput="calculer()"></div>
+        <div id="divMachine" style="margin-top:12px; display:none;"><label>Volume utile (Litres)</label><input type="number" id="capaMachine" value="120" oninput="calculer()"></div>
+    </div>
+
+    <div class="result-box">
+        <div class="res-item">Volume béton total<span><span class="blue-res" id="volTotal">0</span><span class="unit" style="color:#007aff">m³</span></span></div>
+        <div class="res-item"><b>Mélange à commander</b><span><span class="blue-res" id="melangeTotal">0</span><span class="unit" style="color:#007aff">m³</span></span></div>
+        <div class="res-item">Sacs à prévoir<span><span class="blue-res" id="totalSacs">0</span><span class="unit" style="color:#007aff">sacs</span></span></div>
+        <div class="res-item" style="border-bottom: 2px solid #f2f2f7; margin-bottom: 15px;">Total gâchées<span><span class="blue-res" id="nbGachees">0</span><span class="unit" style="color:#007aff">fois</span></span></div>
+        
+        <div class="recipe-title">📍 Recette par gâchée</div>
+        <div class="res-item">Ciment (25kg)<span><span class="orange-res" id="cimentRecette">0</span></span></div>
+        <div class="res-item">Mélange<span><span class="orange-res" id="pellesRecette">0</span><span class="unit" style="color:#ff9500">pelles</span></span></div>
+        <div class="res-item">Eau<span><span class="orange-res" id="eauRecette">0</span><span class="unit" style="color:#ff9500">L</span></span></div>
+    </div>
+
+    <div class="footer">
+        Mélange (sable+gravier) : +20% pour le tassement.<br>
+        1 sac (25kg) ≈ 9 pelles | Dosage 350kg/m³.
+    </div>
+</div>
+
+<script>
+function toggleMode() {
+    let m = document.getElementById('methode').value;
+    document.getElementById('divSac').style.display = (m === 'sac') ? 'block' : 'none';
+    document.getElementById('divMachine').style.display = (m === 'machine') ? 'block' : 'none';
+    calculer();
+}
+
+function calculer() {
+    let L = parseFloat(document.getElementById('long').value) || 0;
+    let l = parseFloat(document.getElementById('larg').value) || 0;
+    let ep = parseFloat(document.getElementById('ep').value) || 0;
+    let p = parseFloat(document.getElementById('perte').value) || 0;
+    let m = document.getElementById('methode').value;
+
+    let volNet = L * l * (ep / 100);
+    let volTotal = volNet * (1 + p / 100);
+    
+    // Pour commander : Volume béton x 1.2 (foisonnement/tassement)
+    let melangeTotal = volTotal * 1.2;
+    let totalSacsReq = Math.ceil(volTotal * 14);
+
+    let cim, pel, eau, gach;
+
+    if (m === 'sac') {
+        let n = parseFloat(document.getElementById('nbSacsFixe').value) || 1;
+        cim = n + (n > 1 ? " sacs" : " sac");
+        pel = Math.round(n * 9);
+        eau = (n * 12).toFixed(1);
+        gach = Math.ceil(totalSacsReq / n);
+    } else {
+        let c = parseFloat(document.getElementById('capaMachine').value) || 100;
+        let vM3 = c / 1000;
+        let sP = vM3 * 14;
+        cim = sP.toFixed(2) + " sac";
+        pel = Math.round(vM3 * 120);
+        eau = (vM3 * 170).toFixed(1);
+        gach = Math.ceil(volTotal / vM3);
+    }
+
+    document.getElementById('volTotal').innerText = volTotal.toFixed(2);
+    document.getElementById('melangeTotal').innerText = melangeTotal.toFixed(2);
+    document.getElementById('totalSacs').innerText = totalSacsReq;
+    document.getElementById('nbGachees').innerText = gach;
+    document.getElementById('cimentRecette').innerText = cim;
+    document.getElementById('pellesRecette').innerText = pel;
+    document.getElementById('eauRecette').innerText = eau;
+}
+calculer();
+</script>
+</body>
+</html>
