@@ -94,7 +94,7 @@ function calculer() {
     if (m === 'sac') {
         let n = parseFloat(document.getElementById('nbSacsFixe').value) || 1;
         cim = n + (n > 1 ? " sacs" : " sac");
-        pel = Math.round(n * 9);
+        pel = Math.round(n * 29);
         eau = (n * 12).toFixed(1);
         gach = Math.ceil(totalSacsReq / n);
     } else {
@@ -102,7 +102,7 @@ function calculer() {
         let vM3 = c / 1000;
         let sP = vM3 * 14;
         cim = sP.toFixed(2) + " sac";
-        pel = Math.round(vM3 * 120);
+        pel = Math.round(vM3 * 350);
         eau = (vM3 * 170).toFixed(1);
         gach = Math.ceil(volTotal / vM3);
     }
